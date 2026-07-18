@@ -322,7 +322,7 @@
       { name: 'Radyo Fenomen', url: 'https://live.radyofenomen.com/fenomen/128/icecast.audio' },
       { name: 'Slow Turk', url: 'https://radyo.duhnet.tv/ak_dtvh_slowturk' }
     ];
-    const COOKIE_NAME = 'selectedRadio';
+    const COOKIE_NAME = 'radioState';
     const radioAudio = new Audio();
     radioAudio.preload = 'none';
     let radioPlaying = false;
@@ -336,6 +336,9 @@
       d.setTime(d.getTime() + days * 86400000);
       document.cookie = name + '=' + encodeURIComponent(value) + ';expires=' + d.toUTCString() + ';path=/';
     }
+    function saveRadioState() {
+      setCookie(COOKIE_NAME, radioSelect.value + '|' + (radioPlaying ? '1' : '0'), 365);
+    }
     function populateRadioSelect() {
       radioStations.forEach((s, i) => {
         const opt = document.createElement('option');
@@ -344,8 +347,16 @@
         radioSelect.appendChild(opt);
       });
       const saved = getCookie(COOKIE_NAME);
-      if (saved !== null && saved >= 0 && saved < radioStations.length) {
-        radioSelect.value = saved;
+      if (saved) {
+        const parts = saved.split('|');
+        const idx = parseInt(parts[0], 10);
+        if (!isNaN(idx) && idx >= 0 && idx < radioStations.length) {
+          radioSelect.value = idx;
+        }
+        if (parts[1] === '1') {
+          radioPlaying = true;
+          radioToggleBtn.textContent = 'Müzik Kapat';
+        }
       }
     }
     function playRadio() {
@@ -369,10 +380,12 @@
       function onPlay() {
         radioPlaying = true;
         radioToggleBtn.textContent = 'Müzik Kapat';
+        saveRadioState();
       }
       function onErr() {
         radioPlaying = false;
         radioToggleBtn.textContent = 'Müzik Aç';
+        saveRadioState();
       }
     }
     function stopRadio() {
@@ -382,6 +395,7 @@
       radioAudio.load();
       radioPlaying = false;
       radioToggleBtn.textContent = 'Müzik Aç';
+      saveRadioState();
     }
     function toggleRadio() {
       if (radioPlaying) {
@@ -392,7 +406,7 @@
     }
     radioToggleBtn.addEventListener('click', toggleRadio);
     radioSelect.addEventListener('change', () => {
-      setCookie(COOKIE_NAME, radioSelect.value, 365);
+      setCookie(COOKIE_NAME, radioSelect.value + '|' + (radioPlaying ? '1' : '0'), 365);
       if (radioPlaying) playRadio();
     });
     populateRadioSelect();
@@ -592,7 +606,7 @@
       updateTimer();
       startTimer();
       startPauseBtn.textContent = 'Duraklat';
-      if (!radioPlaying) playRadio();
+      if (radioPlaying) playRadio();
     });
 
     updateTimer();
