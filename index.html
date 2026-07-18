@@ -19,7 +19,7 @@
     top:50%;
     left:50%;
     transform:translate(-50%,-50%);
-    font-size:5rem;
+    font-size:4rem;
     font-weight:bold;
     color:#000;
     line-height:1;
@@ -33,7 +33,7 @@
     <circle class="bg" cx="90" cy="90" r="80" fill="#fff"/>
     <circle class="progress" cx="90" cy="90" r="80" fill="none" stroke-width="10" stroke-linecap="round"/>
   </svg>
-  <div class="timer-text" id="timer">6</div>
+  <div class="timer-text" id="timer">60</div>
 </div>
 
 <script>
@@ -50,7 +50,7 @@ const images = [
 ];
 let imgIndex = 0;
 let isExercise = true; // true = exercise, false = rest
-let timeLeft = isExercise ? 6 : 3; // seconds
+let timeLeft = isExercise ? 60 : 30; // seconds
 const imgEl = document.getElementById('exerciseImg');
 const timerEl = document.getElementById('timer');
 const progressCircle = document.querySelector('.progress');
@@ -70,19 +70,19 @@ function updateTimer() {
     progressCircle.style.stroke = '#00ff00'; // green for rest
   }
   // update progress dash offset
-  const total = isExercise ? 6 : 3;
+  const total = isExercise ? 60 : 30;
   const progress = 1 - (timeLeft / total); // 0 at start, 1 at end
   const offset = circumference * progress;
   progressCircle.style.strokeDashoffset = offset;
 }
 
 function tick() {
+  // beep in last 3 seconds
+  if (timeLeft <= 3) {
+    bipSound.currentTime = 0;
+    bipSound.play().catch(()=>{}); // ignore autoplay errors
+  }
   if (timeLeft > 0) {
-    // beep in last 3 seconds
-    if (timeLeft <= 3) {
-      bipSound.currentTime = 0;
-      bipSound.play().catch(()=>{}); // ignore autoplay errors
-    }
     timeLeft--;
     updateTimer();
   } else {
@@ -90,13 +90,13 @@ function tick() {
     if (isExercise) {
       // exercise ended -> rest
       isExercise = false;
-      timeLeft = 3;
+      timeLeft = 30;
     } else {
       // rest ended -> next exercise
       isExercise = true;
       imgIndex = (imgIndex + 1) % images.length;
       imgEl.src = images[imgIndex];
-      timeLeft = 6;
+      timeLeft = 60;
     }
     updateTimer();
   }
