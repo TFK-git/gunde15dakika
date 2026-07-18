@@ -60,11 +60,10 @@
       transform: translate(-50%, -50%);
       z-index: 1;
       font-weight: bold;
-      color: #000;
+      color: #fff;
       line-height: 1;
       font-family: sans-serif;
-      text-shadow: 0 0 6px rgba(255, 255, 255, 0.9), 0 0 2px rgba(255, 255, 255, 0.9);
-      -webkit-text-stroke: 1px #fff;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9), 0 0 3px rgba(0, 0, 0, 0.9);
     }
 
     .radio-select {
@@ -110,6 +109,19 @@
       cursor: pointer;
       border-radius: 4px;
     }
+
+    .icon-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 44px;
+      padding: 8px 12px;
+      font-size: 1.4rem;
+      font-weight: bold;
+      line-height: 1;
+    }
+
+    .icon-btn svg { display: block; }
 
     .btn:hover {
       background: #eee;
@@ -268,12 +280,19 @@
   </div>
   <div class="controls">
     <button class="btn" id="startPauseBtn">Duraklat</button>
-    <button class="btn" id="prevBtn">Geri</button>
-    <button class="btn" id="nextBtn">İleri</button>
+    <button class="btn icon-btn" id="prevBtn" aria-label="Geri">&lt;</button>
+    <button class="btn icon-btn" id="nextBtn" aria-label="İleri">&gt;</button>
   </div>
   <div class="radio-controls">
     <select class="radio-select" id="radioSelect"></select>
-    <button class="btn" id="radioToggleBtn">Müzik Aç</button>
+    <button class="btn icon-btn" id="radioToggleBtn" aria-label="Müzik">
+      <svg class="spk-on" viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true">
+        <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4.03v8.06A4.5 4.5 0 0 0 16.5 12zM14 3.23v2.06a7 7 0 0 1 0 13.42v2.06a9 9 0 0 0 0-17.54z"/>
+      </svg>
+      <svg class="spk-off" viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true" style="display:none">
+        <path d="M3 9v6h4l5 5V4L7 9H3zm18.5-1.5L20 6l-2.5 2.5L15 6l-1.5 1.5L16 10l-2.5 2.5L15 14l2.5-2.5L20 14l1.5-1.5L19 10zM14 3.23v2.06a7 7 0 0 1 0 13.42v2.06a9 9 0 0 0 0-17.54z" opacity="0.6"/>
+      </svg>
+    </button>
   </div>
   <div class="intro-screen" id="introScreen">
     <div>
@@ -364,6 +383,19 @@
     function saveRadioState() {
       setCookie(COOKIE_NAME, radioSelect.value + '|' + (radioPlaying ? '1' : '0'), 365);
     }
+    function updateRadioBtn() {
+      const on = radioToggleBtn.querySelector('.spk-on');
+      const off = radioToggleBtn.querySelector('.spk-off');
+      if (radioPlaying) {
+        if (on) on.style.display = '';
+        if (off) off.style.display = 'none';
+        radioToggleBtn.setAttribute('aria-label', 'Müzik Kapat');
+      } else {
+        if (on) on.style.display = 'none';
+        if (off) off.style.display = '';
+        radioToggleBtn.setAttribute('aria-label', 'Müzik Aç');
+      }
+    }
     function populateRadioSelect() {
       radioStations.forEach((s, i) => {
         const opt = document.createElement('option');
@@ -380,9 +412,9 @@
         }
         if (parts[1] === '1') {
           radioPlaying = true;
-          radioToggleBtn.textContent = 'Müzik Kapat';
         }
       }
+      updateRadioBtn();
     }
     function applyRadioStateOnLoad() {
       const saved = getCookie(COOKIE_NAME);
@@ -410,12 +442,12 @@
       radioAudio.play().then(onPlay).catch(onErr);
       function onPlay() {
         radioPlaying = true;
-        radioToggleBtn.textContent = 'Müzik Kapat';
+        updateRadioBtn();
         saveRadioState();
       }
       function onErr() {
         radioPlaying = false;
-        radioToggleBtn.textContent = 'Müzik Aç';
+        updateRadioBtn();
         saveRadioState();
       }
     }
@@ -425,7 +457,7 @@
       radioAudio.removeAttribute('src');
       radioAudio.load();
       radioPlaying = false;
-      radioToggleBtn.textContent = 'Müzik Aç';
+      updateRadioBtn();
       saveRadioState();
     }
     function toggleRadio() {
