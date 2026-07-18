@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-<meta charset="UTF-8">
+  <meta charset="UTF-8">
   <title>15 Dakikalık Ev Egzersizi Zamanlayıcı</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="manifest" href="manifest.json">
@@ -15,25 +15,18 @@
     position:absolute;
     left:10px;
     top:15px;
-    width:30vw;
-    height:30vw;
-    max-width:180px;
-    max-height:180px;
+    width:180px;
+    height:180px;
   }
   .timer-text {
-      position:absolute;
-      top:50%;
-      left:50%;
-      transform:translate(-50%,-50%);
-      font-size: clamp(12px, 6vw, 45px);
-      font-weight:bold;
-      color:#000;
-      line-height:1;
-  }
-  @media (min-width: 600px) {
-    .timer-text {
-      font-size: clamp(24px, 12vw, 90px);
-    }
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    font-size:4rem;
+    font-weight:bold;
+    color:#000;
+    line-height:1;
   }
   .controls {
     position:fixed;
@@ -53,6 +46,7 @@
     border-radius:4px;
   }
   .btn:hover {background:#eee;}
+  .gauge { width: 100%; height: 100%; }
   .intro-screen {
     position:fixed;
     inset:0;
@@ -71,12 +65,12 @@
   .intro-screen h2 {margin-bottom:15px; font-size:2rem;}
   .intro-screen p {margin-bottom:15px; font-size:1.2rem;}
   .intro-screen ul {
-      list-style:none;
-      padding:0;
-      margin:0 0 20px 0;
-      text-align:center;
-      max-width:300px;
-    }
+    list-style:none;
+    padding:0;
+    margin:0 0 20px 0;
+    text-align:center;
+    max-width:300px;
+  }
   .intro-screen li {
     margin:8px 0;
     font-size:1.1rem;
@@ -123,9 +117,9 @@
 <body>
 <img id="exerciseImg" src="img/egzersiz1.jpg" alt="Egzersiz">
 <div class="timer-wrapper">
-  <svg class="gauge" width="100%" height="100%" viewBox="0 0 180 180">
-    <circle class="bg" cx="90" cy="90" r="40" fill="#fff"/>
-    <circle class="progress" cx="90" cy="90" r="40" fill="none" stroke-width="10" stroke-linecap="round"/>
+  <svg class="gauge" width="180" height="180" viewBox="0 0 180 180">
+    <circle class="bg" cx="90" cy="90" r="80" fill="#fff"/>
+    <circle class="progress" cx="90" cy="90" r="80" fill="none" stroke-width="10" stroke-linecap="round"/>
   </svg>
   <div class="timer-text" id="timer">06</div>
 </div>
@@ -185,7 +179,7 @@ const introScreen = document.getElementById('introScreen');
 const bipSound = new Audio("data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBzGH0fPTgjMGHm7A7+OZURE");
 
 // Pre-calc circumference
-const radius = 40;
+const radius = 80;
 const circumference = 2 * Math.PI * radius;
 progressCircle.style.strokeDasharray = `${circumference}`;
 
