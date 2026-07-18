@@ -207,10 +207,11 @@ progressCircle.style.strokeDasharray = `${circumference}`;
 // All 9 images have the same timer position.
 const IMG_NAT_W = 2400;
 const IMG_NAT_H = 1080;
-const TIMER_CENTER_X = 0.175; // gauge center: 17.5% from left (slightly left of original)
-const TIMER_CENTER_Y = 0.175; // gauge center: 17.5% from top  (slightly above original)
-const GAUGE_SIZE_FACTOR = 0.17; // gauge = 17% of rendered image width
-
+// Timer oranları - tüm resim boyutlarına göre sabit (2400x1080)
+const TIMER_CENTER_X = 0.185; // 444px → %18.5 from left
+const TIMER_CENTER_Y = 0.185; // 200px → %18.5 from top
+const GAUGE_SIZE_FACTOR = 0.17; // 409px → %17 of rendered width
+const FONT_FACTOR = 0.384; // font = 38.4% of gauge (32% × 1.20)
 function getImageRenderRect() {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
@@ -243,7 +244,7 @@ function layoutTimer() {
   wrapper.style.top = (cy - size / 2) + 'px';
   wrapper.style.width = size + 'px';
   wrapper.style.height = size + 'px';
-  timerText.style.fontSize = (size * 0.32) + 'px';
+  timerText.style.fontSize = (size * FONT_FACTOR) + 'px';
 }
 
 // Layout on load and resize
