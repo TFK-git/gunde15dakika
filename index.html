@@ -8,32 +8,35 @@
 <style>
   * {margin:0; padding:0; box-sizing:border-box;}
   html,body {height:100%; background:#000; color:#fff; overflow:hidden; font-family:sans-serif;
-            /* responsive base font size */
             font-size:calc(16px + 0.5vw);}
-  #exerciseImg {position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block;}
-  .timer-wrapper {
-    position:absolute;
-    left:10px;
-    top:15px;
-    width:180px;
-    height:180px;
+  #exerciseImg {
+    position:absolute; inset:0; width:100%; height:100%;
+    object-fit:cover; display:block;
+    transition: opacity 0.6s ease;
   }
+  #exerciseImg.resting { opacity: 0.5; }
+  .timer-wrapper {
+      position:fixed;
+      z-index:5;
+      pointer-events:none;
+    }
   .timer-text {
     position:absolute;
     top:50%;
     left:50%;
     transform:translate(-50%,-50%);
-    font-size:4rem;
     font-weight:bold;
     color:#000;
     line-height:1;
+    font-family:sans-serif;
+    text-shadow: 0 0 4px rgba(255,255,255,0.5);
   }
   .controls {
     position:fixed;
-    bottom:20px;
-    right:20px;
+    bottom:2vh;
+    right:2vw;
     display:flex;
-    gap:10px;
+    gap:1vw;
     z-index:10;
   }
   .btn {
@@ -47,6 +50,7 @@
   }
   .btn:hover {background:#eee;}
   .gauge { width: 100%; height: 100%; }
+  .progress { stroke-width: 5.56%; }
   .intro-screen {
     position:fixed;
     inset:0;
@@ -116,8 +120,8 @@
 </head>
 <body>
 <img id="exerciseImg" src="img/egzersiz1.jpg" alt="Egzersiz">
-<div class="timer-wrapper">
-  <svg class="gauge" width="180" height="180" viewBox="0 0 180 180">
+<div class="timer-wrapper" id="timerWrapper">
+  <svg class="gauge" viewBox="0 0 180 180">
     <circle class="bg" cx="90" cy="90" r="80" fill="#fff"/>
     <circle class="progress" cx="90" cy="90" r="80" fill="none" stroke-width="10" stroke-linecap="round"/>
   </svg>
@@ -161,10 +165,10 @@ const images = [
   'img/egzersiz8.jpg',
   'img/egzersiz9.jpg'
 ];
-let imgIndex = 0; // current exercise index
+let imgIndex = 0;
 let state = 'stopped'; // 'stopped', 'exercise', 'rest', 'finished'
-const EXERCISE_TIME = 60; // seconds
-const REST_TIME = 30; // seconds
+const EXERCISE_TIME = 60;
+const REST_TIME = 30;
 let timeLeft = 0;
 const imgEl = document.getElementById('exerciseImg');
 const timerEl = document.getElementById('timer');
@@ -177,37 +181,100 @@ const finishedScreen = document.getElementById('finishedScreen');
 const restartBtn = document.getElementById('restartBtn');
 const introScreen = document.getElementById('introScreen');
 const bipSound = new Audio("data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBzGH0fPTgjMGHm7A7+OZURE");
+const wrapper = document.getElementById('timerWrapper');
+const timerText = document.querySelector('.timer-text');
 
 // Pre-calc circumference
 const radius = 80;
 const circumference = 2 * Math.PI * radius;
 progressCircle.style.strokeDasharray = `${circumference}`;
 
+// ---- Responsive layout: image-referenced gauge positioning ----
+// Timer area on original image (2400x1080):
+//   white gauge center at ~(370, 171) → 15.4% left, 15.8% top
+//   gauge size ~259px → 24% of image height
+const IMG_NAT_W = 2400;
+const IMG_NAT_H = 1080;
+const TIMER_PCT_X = 0.100;  // left edge = 15.4% - (h/w)*24%/2 = 15.4% - 5.4%
+const TIMER_PCT_Y = 0.038;  // top edge  = 15.8% - 24%/2 = 15.8% - 12%
+const GAUGE_SIZE_FACTOR = 0.24; // gauge = 24% of image height
+
+function getImageRenderRect() {
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const imgAspect = IMG_NAT_W / IMG_NAT_H;
+  const viewAspect = vw / vh;
+  let rw, rh, ox, oy;
+  if (viewAspect > imgAspect) {
+    // viewport wider than image → image fills height, cropped left/right
+    rh = vh;
+    rw = vh * imgAspect;
+    ox = (vw - rw) / 2;
+    oy = 0;
+  } else {
+    // viewport taller than image → image fills width, cropped top/bottom
+    rw = vw;
+    rh = vw / imgAspect;
+    ox = 0;
+    oy = (vh - rh) / 2;
+  }
+  return { rw, rh, ox, oy };
+}
+
+function layoutTimer() {
+  const r = getImageRenderRect();
+  const size = r.rh * GAUGE_SIZE_FACTOR;
+  const tx = r.ox + r.rw * TIMER_PCT_X;
+  const ty = r.oy + r.rh * TIMER_PCT_Y;
+
+  wrapper.style.left = tx + 'px';
+  wrapper.style.top = ty + 'px';
+  wrapper.style.width = size + 'px';
+  wrapper.style.height = size + 'px';
+  timerText.style.fontSize = (size * 0.32) + 'px';
+}
+
+// Layout on load and resize
+layoutTimer();
+window.addEventListener('resize', layoutTimer);
+
+// Also re-layout when image loads (in case natural dimensions matter)
+imgEl.addEventListener('load', layoutTimer);
+// ---- end responsive layout ----
+
 let timerInterval = null;
 let isPaused = false;
 
 function updateTimer() {
   timerEl.textContent = String(timeLeft).padStart(2, '0');
-  // set gauge color based on state
+
+  // gauge color
   if (state === 'exercise') {
-    progressCircle.style.stroke = '#ff0000'; // red for exercise
+    progressCircle.style.stroke = '#ff0000';
   } else if (state === 'rest') {
-    progressCircle.style.stroke = '#00ff00'; // green for rest
+    progressCircle.style.stroke = '#00ff00';
   } else {
-    progressCircle.style.stroke = '#777'; // stopped/finished gray
+    progressCircle.style.stroke = '#777';
   }
-  // update progress dash offset
+
+  // progress dash offset
   const total = (state === 'exercise') ? EXERCISE_TIME : REST_TIME;
-  const progress = 1 - (timeLeft / total); // 0 at start, 1 at end
+  const progress = 1 - (timeLeft / total);
   const offset = circumference * progress;
   progressCircle.style.strokeDashoffset = offset;
-  // update image: during exercise show current, during rest show next
+
+  // image + rest fade
   if (state === 'exercise') {
     imgEl.src = images[imgIndex];
+    imgEl.classList.remove('resting');
   } else if (state === 'rest') {
     imgEl.src = images[(imgIndex + 1) % images.length];
+    imgEl.classList.add('resting');
+  } else {
+    imgEl.classList.remove('resting');
   }
-  // hide/show screens
+
+  // screens
   if (state === 'finished') {
     finishedScreen.style.display = 'flex';
     introScreen.style.display = 'none';
@@ -221,25 +288,20 @@ function updateTimer() {
 }
 
 function tick() {
-  // beep in last 3 seconds of exercise
   if (state === 'exercise' && timeLeft <= 3) {
     bipSound.currentTime = 0;
-    bipSound.play().catch(()=>{}); // ignore autoplay errors
+    bipSound.play().catch(()=>{});
   }
   if (!isPaused && (state === 'exercise' || state === 'rest') && timeLeft > 0) {
     timeLeft--;
     updateTimer();
   } else if (!isPaused && (state === 'exercise' || state === 'rest') && timeLeft <= 0) {
-    // phase finished
     if (state === 'exercise') {
-      // exercise ended -> rest
       state = 'rest';
       timeLeft = REST_TIME;
     } else if (state === 'rest') {
-      // rest ended -> next exercise or finished
       imgIndex = (imgIndex + 1) % images.length;
       if (imgIndex === 0) {
-        // we just completed the last exercise's rest (since imgIndex wrapped to 0)
         state = 'finished';
         timeLeft = 0;
       } else {
@@ -264,7 +326,6 @@ function pauseTimer() {
 }
 function toggleStartPause() {
   if (state === 'finished') {
-    // restart from beginning
     resetWorkout();
     return;
   }
@@ -277,17 +338,14 @@ function toggleStartPause() {
   }
 }
 function goNext() {
-  // skip to next exercise immediately (only if not finished)
   if (state === 'finished') return;
   state = 'exercise';
   imgIndex = (imgIndex + 1) % images.length;
   timeLeft = EXERCISE_TIME;
   updateTimer();
-  // ensure timer running
   if (!timerInterval) startTimer();
 }
 function goPrev() {
-  // go to previous exercise
   if (state === 'finished') return;
   state = 'exercise';
   imgIndex = (imgIndex - 1 + images.length) % images.length;
@@ -296,7 +354,6 @@ function goPrev() {
   if (!timerInterval) startTimer();
 }
 function resetWorkout() {
-  // reset to initial stopped state
   pauseTimer();
   state = 'stopped';
   imgIndex = 0;
@@ -305,13 +362,12 @@ function resetWorkout() {
   startPauseBtn.textContent = 'Duraklat';
 }
 
-// initialize
+// init
 startPauseBtn.addEventListener('click', toggleStartPause);
 nextBtn.addEventListener('click', goNext);
 prevBtn.addEventListener('click', goPrev);
 restartBtn.addEventListener('click', resetWorkout);
 startBtn.addEventListener('click', () => {
-  // hide intro, start exercise
   introScreen.style.display = 'none';
   state = 'exercise';
   timeLeft = EXERCISE_TIME;
@@ -320,7 +376,6 @@ startBtn.addEventListener('click', () => {
   startPauseBtn.textContent = 'Duraklat';
 });
 
-// start in stopped state; show intro screen
 updateTimer();
 startPauseBtn.textContent = 'Duraklat';
 </script>
