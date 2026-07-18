@@ -40,7 +40,7 @@
       position: fixed;
       z-index: 5;
       pointer-events: none;
-      padding: 1.5%;
+      padding: 0;
       background: #d3d3d3;
       border-radius: 50%;
       box-sizing: content-box;
@@ -98,18 +98,18 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
+      justify-content: flex-start;
       text-align: center;
       font-size: 1.5rem;
       line-height: 1.6;
-      padding: 20px;
+      padding: 40px 20px;
       z-index: 30;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
     }
 
     .intro-screen>div {
-      max-width: 320px;
+      max-width: 520px;
       width: 100%;
       margin: auto;
       padding: 15px 0;
@@ -130,7 +130,7 @@
       padding: 0;
       margin: 0 0 20px 0;
       text-align: left;
-      max-width: 340px;
+      max-width: 520px;
       width: 100%;
       display: flex;
       flex-direction: column;
@@ -310,7 +310,7 @@
       }
       const size = Math.min(visW, visH) * GAUGE_RATIO * 1.3;
       const totalSize = size * 1.24; // beyaz halka (padding) dahil
-      let leftPx = visLeft + TIMER_RATIO_X * 3 * visW;
+      let leftPx = visLeft + TIMER_RATIO_X * 0.8 * visW;
       let topPx  = visTop  + TIMER_RATIO_Y * visH;
       // Ekran dışına çıkarsa (eksi veya taşarsa) görünür alana çek
       const margin = totalSize * 0.1;
@@ -426,6 +426,12 @@
     }
     function goNext() {
       if (state === 'finished') return;
+      if (imgIndex === images.length - 1) {
+        introScreen.style.display = 'flex';
+        state = 'stopped';
+        updateTimer();
+        return;
+      }
       state = 'exercise';
       imgIndex = (imgIndex + 1) % images.length;
       timeLeft = EXERCISE_TIME;
@@ -434,6 +440,12 @@
     }
     function goPrev() {
       if (state === 'finished') return;
+      if (imgIndex === 0) {
+        introScreen.style.display = 'flex';
+        state = 'stopped';
+        updateTimer();
+        return;
+      }
       state = 'exercise';
       imgIndex = (imgIndex - 1 + images.length) % images.length;
       timeLeft = EXERCISE_TIME;
