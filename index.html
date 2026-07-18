@@ -375,6 +375,12 @@
         }
       }
     }
+    function applyRadioStateOnLoad() {
+      const saved = getCookie(COOKIE_NAME);
+      if (saved && saved.split('|')[1] === '1') {
+        playRadio();
+      }
+    }
     function playRadio() {
       const idx = parseInt(radioSelect.value, 10);
       const url = radioStations[idx].url;
@@ -426,6 +432,7 @@
       if (radioPlaying) playRadio();
     });
     populateRadioSelect();
+    applyRadioStateOnLoad();
 
     // Pre-calc circumference
     const radius = 80;
