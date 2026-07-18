@@ -42,6 +42,32 @@
     border-radius:4px;
   }
   .btn:hover {background:#eee;}
+  .intro-screen {
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.85);
+    color:#fff;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    font-size:1.5rem;
+    line-height:1.5;
+    padding:20px;
+    z-index:30;
+  }
+  .intro-screen button {
+    margin-top:20px;
+    padding:10px 20px;
+    font-size:1.2rem;
+    background:#fff;
+    color:#000;
+    border:none;
+    border-radius:4px;
+    cursor:pointer;
+  }
+  .intro-screen button:hover {background:#eee;}
   .finished-screen {
     position:fixed;
     inset:0;
@@ -77,16 +103,35 @@
     <circle class="bg" cx="90" cy="90" r="80" fill="#fff"/>
     <circle class="progress" cx="90" cy="90" r="80" fill="none" stroke-width="10" stroke-linecap="round"/>
   </svg>
-  <div class="timer-text" id="timer">06</div>
+  <div class="timer-text" id="timer">00</div>
 </div>
 <div class="controls">
-  <button class="btn" id="startPauseBtn">Başlat</button>
+  <button class="btn" id="startPauseBtn">Duraklat</button>
   <button class="btn" id="nextBtn">İleri</button>
   <button class="btn" id="prevBtn">Geri</button>
 </div>
+<div class="intro-screen" id="introScreen">
+  <div>
+    <h2>15 Dakikalık Ev Egzersizi</h2>
+    <p>Her egzersiz <strong>60 saniye</strong> sürer, ardından <strong>30 saniye</strong> dinlenme alırsınız.</p>
+    <p>Bu interval antrenmanı:</p>
+    <ul style="text-align:left; max-width:260px; margin:10px auto;">
+      <li>Kalp ve damar sistemini güçlendirir</li>
+      <li>Kas Tone ve forza artırır</li>
+      <li>Yakıt yakımını artırır</li>
+      <li>Metabolizmayı hızlandırır</li>
+    </ul>
+    <p>Hazır mısınız?</p>
+  </div>
+  <button class="btn" id="introStartBtn">Başlat</button>
+</div>
 <div class="finished-screen" id="finishedScreen">
-  <div>🎉 Tebrikler! Bütün egzersizleri tamamladınız.</div>
-  <button id="restartBtn">Yeniden Başla</button>
+  <div>
+    <h2>🎉 Tebrikler!</h2>
+    <p>Bütün egzersizleri tamamladınız.</p>
+    <p>Toplam süre: <span id="totalTime">00:00</span></p>
+  </div>
+  <button class="btn" id="restartBtn">Yeniden Başla</button>
 </div>
 
 <script>
@@ -101,28 +146,33 @@ const images = [
   'img/egzersiz8.jpg',
   'img/egzersiz9.jpg'
 ];
-let imgIndex = 0; // current exercise index
-let state = 'stopped'; // 'stopped', 'exercise', 'rest', 'finished'
-const EXERCISE_TIME = 6; // seconds
-const REST_TIME = 3; // seconds
+let imgIndex = 0; // current exercise index (0-8)
+let state = 'intro'; // intro, exercise, rest, finished
 let timeLeft = 0;
+const EXERCISE_TIME = 60; // seconds
+const REST_TIME = 30; // seconds
 const imgEl = document.getElementById('exerciseImg');
 const timerEl = document.getElementById('timer');
 const progressCircle = document.querySelector('.progress');
 const startPauseBtn = document.getElementById('startPauseBtn');
 const nextBtn = document.getElementById('nextBtn');
 const prevBtn = document.getElementById('prevBtn');
+const introScreen = document.getElementById('introScreen');
+const introStartBtn = document.getElementById('introStartBtn');
 const finishedScreen = document.getElementById('finishedScreen');
+const totalTimeSpan = document.getElementById('totalTime');
 const restartBtn = document.getElementById('restartBtn');
 const bipSound = new Audio("data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBzGH0fPTgjMGHm7A7+OZURE");
+
+let timerInterval = null;
+let isPaused = false;
+let workoutStartTime = null;
+let totalElapsed = 0; // seconds elapsed while running
 
 // Pre-calc circumference
 const radius = 80;
 const circumference = 2 * Math.PI * radius;
 progressCircle.style.strokeDasharray = `${circumference}`;
-
-let timerInterval = null;
-let isPaused = false;
 
 function updateTimer() {
   timerEl.textContent = String(timeLeft).padStart(2, '0');
@@ -148,8 +198,18 @@ function updateTimer() {
   // hide/show finished screen
   if (state === 'finished') {
     finishedScreen.style.display = 'flex';
+    totalTimeSpan.textContent = `${String(Math.floor(totalElapsed / 60)).padStart(2,'0')}:${String(totalElapsed % 60).padStart(2,'0')}`;
   } else {
     finishedScreen.style.display = 'none';
+  }
+  // hide intro screen unless in intro state
+  if (state === 'intro') {
+    introScreen.style.display = 'flex';
+    // hide main controls while in intro
+    document.querySelector('.controls').style.display = 'none';
+  } else {
+    introScreen.style.display = 'none';
+    document.querySelector('.controls').style.display = 'flex';
   }
 }
 
@@ -161,6 +221,7 @@ function tick() {
   }
   if (!isPaused && (state === 'exercise' || state === 'rest') && timeLeft > 0) {
     timeLeft--;
+    totalElapsed++;
     updateTimer();
   } else if (!isPaused && (state === 'exercise' || state === 'rest') && timeLeft <= 0) {
     // phase finished
@@ -187,6 +248,7 @@ function tick() {
 function startTimer() {
   if (!timerInterval) {
     timerInterval = setInterval(tick, 1000);
+    workoutStartTime = Date.now();
   }
 }
 function pauseTimer() {
@@ -199,6 +261,17 @@ function toggleStartPause() {
   if (state === 'finished') {
     // restart from beginning
     resetWorkout();
+    return;
+  }
+  if (state === 'intro') {
+    // start workout from intro
+    state = 'exercise';
+    imgIndex = 0;
+    timeLeft = EXERCISE_TIME;
+    totalElapsed = 0;
+    updateTimer();
+    startTimer();
+    startPauseBtn.textContent = 'Duraklat';
     return;
   }
   isPaused = !isPaused;
@@ -231,22 +304,27 @@ function goPrev() {
 function resetWorkout() {
   // reset to initial stopped state
   pauseTimer();
-  state = 'stopped';
+  state = 'intro';
   imgIndex = 0;
   timeLeft = 0;
+  totalElapsed = 0;
   updateTimer();
-  startPauseBtn.textContent = 'Başlat';
+  startPauseBtn.textContent = 'Duraklat'; // will be set to Duraklat after start, but we set later
 }
 
 // initialize
 startPauseBtn.addEventListener('click', toggleStartPause);
 nextBtn.addEventListener('click', goNext);
 prevBtn.addEventListener('click', goPrev);
+introStartBtn.addEventListener('click', () => {
+  // clicking start on intro also triggers start
+  toggleStartPause();
+});
 restartBtn.addEventListener('click', resetWorkout);
 
-// start in stopped state; do NOT start timer automatically
+// start in intro state; do NOT start timer automatically
 updateTimer();
-startPauseBtn.textContent = 'Başlat';
+startPauseBtn.textContent = 'Duraklat'; // default label when not started
 </script>
 </body>
 </html>
