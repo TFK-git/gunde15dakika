@@ -68,6 +68,18 @@
       color: #000;
     }
 
+    .radio-controls {
+      position: fixed;
+      bottom: 2vh;
+      left: 2vw;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1vw;
+      align-items: center;
+      z-index: 50;
+      max-width: 96vw;
+    }
+
     .controls {
       position: fixed;
       bottom: 2vh;
@@ -244,11 +256,13 @@
     <div class="timer-text" id="timer">06</div>
   </div>
   <div class="controls">
-    <select class="radio-select" id="radioSelect"></select>
-    <button class="btn" id="radioToggleBtn">Müzik Aç</button>
     <button class="btn" id="startPauseBtn">Duraklat</button>
     <button class="btn" id="prevBtn">Geri</button>
     <button class="btn" id="nextBtn">İleri</button>
+  </div>
+  <div class="radio-controls">
+    <select class="radio-select" id="radioSelect"></select>
+    <button class="btn" id="radioToggleBtn">Müzik Aç</button>
   </div>
   <div class="intro-screen" id="introScreen">
     <div>
