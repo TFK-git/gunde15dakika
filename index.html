@@ -58,13 +58,14 @@
       text-shadow: 0 0 4px rgba(255, 255, 255, 0.5);
     }
 
-    .controls {
-      position: fixed;
-      bottom: 2vh;
-      right: 2vw;
-      display: flex;
-      gap: 1vw;
-      z-index: 10;
+    .radio-select {
+      max-width: 30vw;
+      font-size: 1rem;
+      padding: 8px 10px;
+      border-radius: 4px;
+      border: none;
+      background: #fff;
+      color: #000;
     }
 
     .btn {
@@ -218,6 +219,7 @@
       background: #eee;
     }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
 </head>
 
 <body>
@@ -230,6 +232,8 @@
     <div class="timer-text" id="timer">06</div>
   </div>
   <div class="controls">
+    <select class="radio-select" id="radioSelect"></select>
+    <button class="btn" id="radioToggleBtn">Müzik Aç</button>
     <button class="btn" id="startPauseBtn">Duraklat</button>
     <button class="btn" id="prevBtn">Geri</button>
     <button class="btn" id="nextBtn">İleri</button>
@@ -285,6 +289,101 @@
     const bipSound = new Audio("data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBzGH0fPTgjMGHm7A7+OZURE");
     const wrapper = document.getElementById('timerWrapper');
     const timerText = document.querySelector('.timer-text');
+    const radioSelect = document.getElementById('radioSelect');
+    const radioToggleBtn = document.getElementById('radioToggleBtn');
+
+    // ---- Radio stations ----
+    const radioStations = [
+      { name: 'Radio Eksen', url: 'https://ssldyg.radyotvonline.com/pozitif/smil:eksen.smil/playlist.m3u8' },
+      { name: 'Radio Voyage', url: 'https://dygedge.radyotvonline.net/radyovoyage/playlist.m3u8' },
+      { name: 'Show Radyo', url: 'https://showradyo.radyotvonline.net/showradyoaac' },
+      { name: 'Joy Türk', url: 'https://playerservices.streamtheworld.com/api/livestream-redirect/JOY_TURK128AAC.aac' },
+      { name: 'Radyo Turkuvaz', url: 'https://trkvz-radyolar.ercdn.net/radyoturkuvaz/playlist.m3u8' },
+      { name: 'TRT FM', url: 'https://rd-trtfm.medya.trt.com.tr/master.m3u8' },
+      { name: 'Best FM', url: 'https://wowza1.radyotvonline.com/best/bestfm.stream/playlist.m3u8' },
+      { name: 'TRT Türkü', url: 'https://rd-trtturku.medya.trt.com.tr/master_128.m3u8' },
+      { name: 'TRT Nağme', url: 'https://rd-trtnagme.medya.trt.com.tr/master.m3u8' },
+      { name: 'Alem FM', url: 'https://turkmedya.radyotvonline.net/alemfmaac' },
+      { name: 'Power FM', url: 'https://live.powerapp.com.tr/powerfm/abr/playlist.m3u8' },
+      { name: 'Metro FM', url: 'https://playerservices.streamtheworld.com/api/livestream-redirect/METRO_FM128AAC.aac' },
+      { name: 'Power Türk', url: 'https://live.powerapp.com.tr/powerturk/mpeg/icecast.audio' },
+      { name: 'Radyo Fenomen', url: 'https://live.radyofenomen.com/fenomen/128/icecast.audio' },
+      { name: 'Slow Turk', url: 'https://radyo.duhnet.tv/ak_dtvh_slowturk' }
+    ];
+    const COOKIE_NAME = 'selectedRadio';
+    const radioAudio = new Audio();
+    radioAudio.preload = 'none';
+    let radioPlaying = false;
+
+    function getCookie(name) {
+      const m = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+      return m ? decodeURIComponent(m[2]) : null;
+    }
+    function setCookie(name, value, days) {
+      const d = new Date();
+      d.setTime(d.getTime() + days * 86400000);
+      document.cookie = name + '=' + encodeURIComponent(value) + ';expires=' + d.toUTCString() + ';path=/';
+    }
+    function populateRadioSelect() {
+      radioStations.forEach((s, i) => {
+        const opt = document.createElement('option');
+        opt.value = i;
+        opt.textContent = s.name;
+        radioSelect.appendChild(opt);
+      });
+      const saved = getCookie(COOKIE_NAME);
+      if (saved !== null && saved >= 0 && saved < radioStations.length) {
+        radioSelect.value = saved;
+      }
+    }
+    function playRadio() {
+      const idx = parseInt(radioSelect.value, 10);
+      const url = radioStations[idx].url;
+      if (url.includes('.m3u8') && !radioAudio.canPlayType('application/vnd.apple.mpegurl')) {
+        if (window.Hls && Hls.isSupported()) {
+          if (window._hls) window._hls.destroy();
+          const hls = new Hls();
+          window._hls = hls;
+          hls.loadSource(url);
+          hls.attachMedia(radioAudio);
+          hls.on(Hls.Events.MANIFEST_PARSED, () => {
+            radioAudio.play().then(onPlay).catch(onErr);
+          });
+          return;
+        }
+      }
+      radioAudio.src = url;
+      radioAudio.play().then(onPlay).catch(onErr);
+      function onPlay() {
+        radioPlaying = true;
+        radioToggleBtn.textContent = 'Müzik Kapat';
+      }
+      function onErr() {
+        radioPlaying = false;
+        radioToggleBtn.textContent = 'Müzik Aç';
+      }
+    }
+    function stopRadio() {
+      radioAudio.pause();
+      if (window._hls) { window._hls.destroy(); window._hls = null; }
+      radioAudio.removeAttribute('src');
+      radioAudio.load();
+      radioPlaying = false;
+      radioToggleBtn.textContent = 'Müzik Aç';
+    }
+    function toggleRadio() {
+      if (radioPlaying) {
+        stopRadio();
+      } else {
+        playRadio();
+      }
+    }
+    radioToggleBtn.addEventListener('click', toggleRadio);
+    radioSelect.addEventListener('change', () => {
+      setCookie(COOKIE_NAME, radioSelect.value, 365);
+      if (radioPlaying) playRadio();
+    });
+    populateRadioSelect();
 
     // Pre-calc circumference
     const radius = 80;
@@ -369,9 +468,11 @@
       if (state === 'finished') {
         finishedScreen.style.display = 'flex';
         introScreen.style.display = 'none';
+        if (radioPlaying) stopRadio();
       } else if (state === 'stopped') {
         finishedScreen.style.display = 'none';
         introScreen.style.display = 'flex';
+        if (radioPlaying) stopRadio();
       } else {
         finishedScreen.style.display = 'none';
         introScreen.style.display = 'none';
@@ -479,6 +580,7 @@
       updateTimer();
       startTimer();
       startPauseBtn.textContent = 'Duraklat';
+      if (!radioPlaying) playRadio();
     });
 
     updateTimer();

@@ -1,0 +1,15 @@
+Radio Eksen=https://ssldyg.radyotvonline.com/pozitif/smil:eksen.smil/playlist.m3u8
+Radio Voyage=https://dygedge.radyotvonline.net/radyovoyage/playlist.m3u8
+Show Radyo=https://showradyo.radyotvonline.net/showradyoaac
+Joy Türk=https://playerservices.streamtheworld.com/api/livestream-redirect/JOY_TURK128AAC.aac
+Radyo Turkuvaz=https://trkvz-radyolar.ercdn.net/radyoturkuvaz/playlist.m3u8
+TRT FM=https://rd-trtfm.medya.trt.com.tr/master.m3u8
+Best FM=https://wowza1.radyotvonline.com/best/bestfm.stream/playlist.m3u8
+TRT Türkü=https://rd-trtturku.medya.trt.com.tr/master_128.m3u8
+TRT Nağme=https://rd-trtnagme.medya.trt.com.tr/master.m3u8
+Alem FM=https://turkmedya.radyotvonline.net/alemfmaac
+Power FM=https://live.powerapp.com.tr/powerfm/abr/playlist.m3u8
+Metro FM=https://playerservices.streamtheworld.com/api/livestream-redirect/METRO_FM128AAC.aac
+Power Türk=https://live.powerapp.com.tr/powerturk/mpeg/icecast.audio
+Radyo Fenomen=https://live.radyofenomen.com/fenomen/128/icecast.audio
+Slow Turk=https://radyo.duhnet.tv/ak_dtvh_slowturk
