@@ -427,8 +427,10 @@
     function goNext() {
       if (state === 'finished') return;
       if (imgIndex === images.length - 1) {
-        introScreen.style.display = 'flex';
-        state = 'stopped';
+        finishedScreen.style.display = 'flex';
+        introScreen.style.display = 'none';
+        state = 'finished';
+        timeLeft = 0;
         updateTimer();
         return;
       }
