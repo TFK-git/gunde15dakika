@@ -19,7 +19,7 @@
     top:50%;
     left:50%;
     transform:translate(-50%,-50%);
-    font-size:4rem;
+    font-size:5rem;
     font-weight:bold;
     color:#000;
     line-height:1;
@@ -31,9 +31,9 @@
 <div class="timer-wrapper">
   <svg class="gauge" width="180" height="180" viewBox="0 0 180 180">
     <circle class="bg" cx="90" cy="90" r="80" fill="#fff"/>
-    <circle class="progress" cx="90" cy="90" r="80" fill="none" stroke="#00ff00" stroke-width="10" stroke-linecap="round"/>
+    <circle class="progress" cx="90" cy="90" r="80" fill="none" stroke-width="10" stroke-linecap="round"/>
   </svg>
-  <div class="timer-text" id="timer">60</div>
+  <div class="timer-text" id="timer">6</div>
 </div>
 
 <script>
@@ -49,27 +49,40 @@ const images = [
   'img/egzersiz9.jpg'
 ];
 let imgIndex = 0;
-let isExercise = true; // true = exercise 60s, false = rest 30s
-let timeLeft = isExercise ? 60 : 30;
+let isExercise = true; // true = exercise, false = rest
+let timeLeft = isExercise ? 6 : 3; // seconds
 const imgEl = document.getElementById('exerciseImg');
 const timerEl = document.getElementById('timer');
 const progressCircle = document.querySelector('.progress');
+const bipSound = new Audio("data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBzGH0fPTgjMGHm7A7+OZURE");
 
-// pre-calc circumference
+// Pre-calc circumference
 const radius = 80;
 const circumference = 2 * Math.PI * radius;
 progressCircle.style.strokeDasharray = `${circumference}`;
 
 function updateTimer() {
   timerEl.textContent = String(timeLeft).padStart(2, '0');
-  // update progress
-  const total = isExercise ? 60 : 30;
+  // set color based on phase
+  if (isExercise) {
+    progressCircle.style.stroke = '#ff0000'; // red for exercise
+  } else {
+    progressCircle.style.stroke = '#00ff00'; // green for rest
+  }
+  // update progress dash offset
+  const total = isExercise ? 6 : 3;
   const progress = 1 - (timeLeft / total); // 0 at start, 1 at end
   const offset = circumference * progress;
   progressCircle.style.strokeDashoffset = offset;
 }
+
 function tick() {
   if (timeLeft > 0) {
+    // beep in last 3 seconds
+    if (timeLeft <= 3) {
+      bipSound.currentTime = 0;
+      bipSound.play().catch(()=>{}); // ignore autoplay errors
+    }
     timeLeft--;
     updateTimer();
   } else {
@@ -77,17 +90,18 @@ function tick() {
     if (isExercise) {
       // exercise ended -> rest
       isExercise = false;
-      timeLeft = 30;
+      timeLeft = 3;
     } else {
       // rest ended -> next exercise
       isExercise = true;
       imgIndex = (imgIndex + 1) % images.length;
       imgEl.src = images[imgIndex];
-      timeLeft = 60;
+      timeLeft = 6;
     }
     updateTimer();
   }
 }
+
 setInterval(tick, 1000);
 updateTimer();
 </script>
