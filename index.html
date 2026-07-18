@@ -7,23 +7,34 @@
   * {margin:0; padding:0; box-sizing:border-box;}
   html,body {height:100%; background:#000; color:#fff; overflow:hidden; font-family:sans-serif;}
   #exerciseImg {position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block;}
-  #timer {
+  .timer-wrapper {
     position:absolute;
-    top:20px;
     left:20px;
-    font-size:8rem;
+    top:20px;
+    width:180px;
+    height:180px;
+  }
+  .timer-text {
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    font-size:4rem;
     font-weight:bold;
+    color:#000;
     line-height:1;
-    background:#fff; /* opaque white */
-    color:#000; /* black */
-    padding:10px 2px 20px;
-    border-radius:8px;
   }
 </style>
 </head>
 <body>
 <img id="exerciseImg" src="img/egzersiz1.jpg" alt="Egzersiz">
-<div id="timer">60</div>
+<div class="timer-wrapper">
+  <svg class="gauge" width="180" height="180" viewBox="0 0 180 180">
+    <circle class="bg" cx="90" cy="90" r="80" fill="#fff"/>
+    <circle class="progress" cx="90" cy="90" r="80" fill="none" stroke="#00ff00" stroke-width="10" stroke-linecap="round"/>
+  </svg>
+  <div class="timer-text" id="timer">60</div>
+</div>
 
 <script>
 const images = [
@@ -42,9 +53,20 @@ let isExercise = true; // true = exercise 60s, false = rest 30s
 let timeLeft = isExercise ? 60 : 30;
 const imgEl = document.getElementById('exerciseImg');
 const timerEl = document.getElementById('timer');
+const progressCircle = document.querySelector('.progress');
+
+// pre-calc circumference
+const radius = 80;
+const circumference = 2 * Math.PI * radius;
+progressCircle.style.strokeDasharray = `${circumference}`;
 
 function updateTimer() {
   timerEl.textContent = String(timeLeft).padStart(2, '0');
+  // update progress
+  const total = isExercise ? 60 : 30;
+  const progress = 1 - (timeLeft / total); // 0 at start, 1 at end
+  const offset = circumference * progress;
+  progressCircle.style.strokeDashoffset = offset;
 }
 function tick() {
   if (timeLeft > 0) {
