@@ -5,7 +5,9 @@
 <title>15 Dakikalık Ev Egzersizi Zamanlayıcı</title>
 <style>
   * {margin:0; padding:0; box-sizing:border-box;}
-  html,body {height:100%; background:#000; color:#fff; overflow:hidden; font-family:sans-serif;}
+  html,body {height:100%; background:#000; color:#fff; overflow:hidden; font-family:sans-serif;
+            /* responsive base font size */
+            font-size:calc(16px + 0.5vw);}
   #exerciseImg {position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block;}
   .timer-wrapper {
     position:absolute;
@@ -57,7 +59,7 @@
     padding:20px;
     z-index:30;
   }
-  .intro-screen h2 {margin-bottom:15px;}
+  .intro-screen h2 {margin-bottom:15px; font-size:2rem;}
   .intro-screen p {margin-bottom:15px; font-size:1.2rem;}
   .intro-screen ul {
     list-style:none;
@@ -126,8 +128,9 @@
 <div class="intro-screen" id="introScreen">
   <div>
     <h2>15 Dakikalık Ev Egzersizi</h2>
-    <p>Her egzersiz 60 saniye, her egzersiz sonrası 30 saniye dinlenme.</p>
-    <ul>
+    <p>Bu rutinde toplam <strong>15 dakika</strong> sürecek; her egzersiz <strong>1 dakika (60 saniye)</strong> sürer ve ardından <strong>30 saniye</strong> dinlenme alırsınız.</p>
+    <p>Bu interval antrenmanı aşağıdaki faydaları sağlar:</p>
+    <ul class="benefits">
       <li>💥 Kalori yakma</li>
       <li>💥 Eklemler üzerinde düşük etki</li>
       <li>💥 Esneklik geliştirme</li>
@@ -157,8 +160,8 @@ const images = [
 ];
 let imgIndex = 0; // current exercise index
 let state = 'stopped'; // 'stopped', 'exercise', 'rest', 'finished'
-const EXERCISE_TIME = 6; // seconds (short for testing)
-const REST_TIME = 3; // seconds (short for testing)
+const EXERCISE_TIME = 60; // seconds
+const REST_TIME = 30; // seconds
 let timeLeft = 0;
 const imgEl = document.getElementById('exerciseImg');
 const timerEl = document.getElementById('timer');
