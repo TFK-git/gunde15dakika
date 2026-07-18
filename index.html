@@ -234,7 +234,7 @@
         <div class="exercise-info hidden" id="exerciseScreen">
             <div class="exercise-name" id="exerciseName">Squat</div>
             <div class="exercise-image">
-                <img id="exerciseImage" src="egzersiz1.jpg" alt="Egzersiz">
+                <img id="exerciseImage" src="img/egzersiz1.jpg" alt="Egzersiz">
             </div>
             <div class="countdown active" id="countdown">60</div>
             <div class="next-exercise hidden" id="nextExercise">Sıradaki Hareket: Lunge</div>
@@ -259,25 +259,25 @@
 
     <!-- Ses Efektleri -->
     <audio id="countdownSound" preload="auto">
-        <source src="countdown.mp3" type="audio/mpeg">
+        <source src="sounds/countdown.mp3" type="audio/mpeg">
     </audio>
     <audio id="finishSound" preload="auto">
-        <source src="finish.mp3" type="audio/mpeg">
+        <source src="sounds/finish.mp3" type="audio/mpeg">
     </audio>
 
     <script>
         class ExerciseTimer {
             constructor() {
                 this.exercises = [
-                    { name: 'Squat', image: 'egzersiz1.jpg' },
-                    { name: 'Lunge', image: 'egzersiz2.jpg' },
-                    { name: 'Plank', image: 'egzersiz3.jpg' },
-                    { name: 'Push-up', image: 'egzersiz4.jpg' },
-                    { name: 'Jumping Jacks', image: 'egzersiz5.jpg' },
-                    { name: 'Mountain Climber', image: 'egzersiz6.jpg' },
-                    { name: 'Burpee', image: 'egzersiz7.jpg' },
-                    { name: 'Russian Twist', image: 'egzersiz8.jpg' },
-                    { name: 'Bicycle Crunch', image: 'egzersiz9.jpg' }
+                    { name: 'Squat', image: 'img/egzersiz1.jpg' },
+                    { name: 'Lunge', image: 'img/egzersiz2.jpg' },
+                    { name: 'Plank', image: 'img/egzersiz3.jpg' },
+                    { name: 'Push-up', image: 'img/egzersiz4.jpg' },
+                    { name: 'Jumping Jacks', image: 'img/egzersiz5.jpg' },
+                    { name: 'Mountain Climber', image: 'img/egzersiz6.jpg' },
+                    { name: 'Burpee', image: 'img/egzersiz7.jpg' },
+                    { name: 'Russian Twist', image: 'img/egzersiz8.jpg' },
+                    { name: 'Bicycle Crunch', image: 'img/egzersiz9.jpg' }
                 ];
                 
                 this.currentExercise = 0;
