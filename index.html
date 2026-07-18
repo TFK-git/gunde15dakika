@@ -200,60 +200,19 @@ const radius = 80;
 const circumference = 2 * Math.PI * radius;
 progressCircle.style.strokeDasharray = `${circumference}`;
 
-// ---- Responsive layout: image-referenced gauge positioning ----
-// Timer area on original image (2400x1080):
-//   white gauge center at ~(444, 200) → 18.5% left, 18.5% top
-//   gauge width ~409px → 17% of image width
-// All 9 images have the same timer position.
-const IMG_NAT_W = 2400;
-const IMG_NAT_H = 1080;
-// Timer oranları - tüm resim boyutlarına göre sabit (2400x1080)
-const TIMER_CENTER_X = 0.185; // 444px → %18.5 from left
-const TIMER_CENTER_Y = 0.185; // 200px → %18.5 from top
-const GAUGE_SIZE_FACTOR = 0.17; // 409px → %17 of rendered width
-const FONT_FACTOR = 0.384; // font = 38.4% of gauge (32% × 1.20)
-function getImageRenderRect() {
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
-  const imgAspect = IMG_NAT_W / IMG_NAT_H;
-  const viewAspect = vw / vh;
-  let rw, rh, ox, oy;
-  if (viewAspect > imgAspect) {
-    // viewport wider than image → image fills height, cropped left/right
-    rh = vh;
-    rw = vh * imgAspect;
-    ox = (vw - rw) / 2;
-    oy = 0;
-  } else {
-    // viewport taller than image → image fills width, cropped top/bottom
-    rw = vw;
-    rh = vw / imgAspect;
-    ox = 0;
-    oy = (vh - rh) / 2;
-  }
-  return { rw, rh, ox, oy };
-}
-
+// ---- Fixed timer position ----
+const TIMER_LEFT = 200;   // px from left
+const TIMER_TOP = 50;     // px from top
+const GAUGE_SIZE = 100;   // px (square)
+const FONT_SIZE = 38;     // px
 function layoutTimer() {
-  const r = getImageRenderRect();
-  const size = r.rw * GAUGE_SIZE_FACTOR;
-  const cx = r.ox + r.rw * TIMER_CENTER_X;
-  const cy = r.oy + r.rh * TIMER_CENTER_Y;
-
-  wrapper.style.left = (cx - size / 2) + 'px';
-  wrapper.style.top = (cy - size / 2) + 'px';
-  wrapper.style.width = size + 'px';
-  wrapper.style.height = size + 'px';
-  timerText.style.fontSize = (size * FONT_FACTOR) + 'px';
+  wrapper.style.left = TIMER_LEFT + 'px';
+  wrapper.style.top = TIMER_TOP + 'px';
+  wrapper.style.width = GAUGE_SIZE + 'px';
+  wrapper.style.height = GAUGE_SIZE + 'px';
+  timerText.style.fontSize = FONT_SIZE + 'px';
 }
-
-// Layout on load and resize
 layoutTimer();
-window.addEventListener('resize', layoutTimer);
-
-// Also re-layout when image loads (in case natural dimensions matter)
-imgEl.addEventListener('load', layoutTimer);
-// ---- end responsive layout ----
 
 let timerInterval = null;
 let isPaused = false;
