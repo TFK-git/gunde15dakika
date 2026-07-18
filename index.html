@@ -18,7 +18,7 @@
     position:absolute;
     top:50%;
     left:50%;
-    transform:translate(-50%,-50%);
+    transform:translate(-50%,-50%) translate(-10px, -5px);
     font-size:4rem;
     font-weight:bold;
     color:#000;
@@ -116,7 +116,7 @@
     <circle class="bg" cx="90" cy="90" r="80" fill="#fff"/>
     <circle class="progress" cx="90" cy="90" r="80" fill="none" stroke-width="10" stroke-linecap="round"/>
   </svg>
-  <div class="timer-text" id="timer">00</div>
+  <div class="timer-text" id="timer">06</div>
 </div>
 <div class="controls">
   <button class="btn" id="startPauseBtn">Duraklat</button>
@@ -126,8 +126,8 @@
 <div class="intro-screen" id="introScreen">
   <div>
     <h2>15 Dakikalık Ev Egzersizi</h2>
-    <p>Bu egzersiz rutini aşağıdaki faydaları sağlar:</p>
-    <ul class="benefits">
+    <p>Her egzersiz 60 saniye, her egzersiz sonrası 30 saniye dinlenme.</p>
+    <ul>
       <li>💥 Kalori yakma</li>
       <li>💥 Eklemler üzerinde düşük etki</li>
       <li>💥 Esneklik geliştirme</li>
@@ -139,7 +139,7 @@
   </div>
 </div>
 <div class="finished-screen" id="finishedScreen">
-  <div>🎉 Tebrikler! Bütün egzersizleri tamamladınız.</div>
+  <div>🎹 Tebrikler! Bütün egzersizleri tamamladınız.</div>
   <button id="restartBtn">Yeniden Başla</button>
 </div>
 
@@ -157,8 +157,8 @@ const images = [
 ];
 let imgIndex = 0; // current exercise index
 let state = 'stopped'; // 'stopped', 'exercise', 'rest', 'finished'
-const EXERCISE_TIME = 6; // seconds (test); change to 60 for real
-const REST_TIME = 3; // seconds (test); change to 30 for real
+const EXERCISE_TIME = 60; // seconds
+const REST_TIME = 30; // seconds
 let timeLeft = 0;
 const imgEl = document.getElementById('exerciseImg');
 const timerEl = document.getElementById('timer');
@@ -166,7 +166,7 @@ const progressCircle = document.querySelector('.progress');
 const startPauseBtn = document.getElementById('startPauseBtn');
 const nextBtn = document.getElementById('nextBtn');
 const prevBtn = document.getElementById('prevBtn');
-const startBtn = document.getElementById('startBtn'); // from intro screen
+const startBtn = document.getElementById('startBtn');
 const finishedScreen = document.getElementById('finishedScreen');
 const restartBtn = document.getElementById('restartBtn');
 const introScreen = document.getElementById('introScreen');
@@ -182,7 +182,7 @@ let isPaused = false;
 
 function updateTimer() {
   timerEl.textContent = String(timeLeft).padStart(2, '0');
-  // set gauge color based on phase
+  // set gauge color based on state
   if (state === 'exercise') {
     progressCircle.style.stroke = '#ff0000'; // red for exercise
   } else if (state === 'rest') {
@@ -205,10 +205,12 @@ function updateTimer() {
   if (state === 'finished') {
     finishedScreen.style.display = 'flex';
     introScreen.style.display = 'none';
+  } else if (state === 'stopped') {
+    finishedScreen.style.display = 'none';
+    introScreen.style.display = 'flex';
   } else {
     finishedScreen.style.display = 'none';
-    // intro screen shown only when state is stopped
-    introScreen.style.display = (state === 'stopped') ? 'flex' : 'none';
+    introScreen.style.display = 'none';
   }
 }
 
@@ -294,7 +296,7 @@ function resetWorkout() {
   imgIndex = 0;
   timeLeft = 0;
   updateTimer();
-  startPauseBtn.textContent = 'Duraklat'; // will be shown as Duraklat after intro? Actually we show intro again
+  startPauseBtn.textContent = 'Duraklat';
 }
 
 // initialize
@@ -303,7 +305,6 @@ nextBtn.addEventListener('click', goNext);
 prevBtn.addEventListener('click', goPrev);
 restartBtn.addEventListener('click', resetWorkout);
 startBtn.addEventListener('click', () => {
-  // hide intro, start exercise
   introScreen.style.display = 'none';
   state = 'exercise';
   timeLeft = EXERCISE_TIME;
@@ -312,9 +313,9 @@ startBtn.addEventListener('click', () => {
   startPauseBtn.textContent = 'Duraklat';
 });
 
-// start in stopped state; show intro, do not start timer automatically
+// start in stopped state; show intro screen
 updateTimer();
-startPauseBtn.textContent = 'Duraklat'; // will be overridden by intro screen logic; but we set intro to show
+startPauseBtn.textContent = 'Duraklat';
 </script>
 </body>
 </html>
