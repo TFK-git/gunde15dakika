@@ -215,15 +215,15 @@
             <div class="exercise-list">
                 <h3>Egzersiz Listesi:</h3>
                 <ul>
-                    <li>1. Squat (Çömelme)</li>
-                    <li>2. Lunge (Diz Çökme)</li>
-                    <li>3. Plank (Plank)</li>
-                    <li>4. Push-up (Şınav)</li>
-                    <li>5. Jumping Jacks (Zıplaya Zıplaya)</li>
-                    <li>6. Mountain Climber (Dağcı)</li>
-                    <li>7. Burpee (Burpee)</li>
-                    <li>8. Russian Twist (Rus Dönüşü)</li>
-                    <li>9. Bicycle Crunch (Bisiklet Karın)</li>
+                    <li>1. Çömelme (Squat)</li>
+                    <li>2. Adımlama (Lunge)</li>
+                    <li>3. Plank</li>
+                    <li>4. Şınav</li>
+                    <li>5. Zıplama Jack</li>
+                    <li>6. Dağ Tırmanışı</li>
+                    <li>7. Burpee</li>
+                    <li>8. Rus Çevirme</li>
+                    <li>9. Bisiklet Karın</li>
                 </ul>
             </div>
             
@@ -232,12 +232,12 @@
 
         <!-- Egzersiz Ekranı -->
         <div class="exercise-info hidden" id="exerciseScreen">
-            <div class="exercise-name" id="exerciseName">Squat</div>
+            <div class="exercise-name" id="exerciseName">Çömelme</div>
             <div class="exercise-image">
                 <img id="exerciseImage" src="img/egzersiz1.jpg" alt="Egzersiz">
             </div>
             <div class="countdown active" id="countdown">60</div>
-            <div class="next-exercise hidden" id="nextExercise">Sıradaki Hareket: Lunge</div>
+            <div class="next-exercise hidden" id="nextExercise">Sıradaki Hareket: Adımlama</div>
         </div>
 
         <!-- Bitiş Ekranı -->
@@ -269,15 +269,15 @@
         class ExerciseTimer {
             constructor() {
                 this.exercises = [
-                    { name: 'Squat', image: 'img/egzersiz1.jpg' },
-                    { name: 'Lunge', image: 'img/egzersiz2.jpg' },
+                    { name: 'Çömelme', image: 'img/egzersiz1.jpg' },
+                    { name: 'Adımlama', image: 'img/egzersiz2.jpg' },
                     { name: 'Plank', image: 'img/egzersiz3.jpg' },
-                    { name: 'Push-up', image: 'img/egzersiz4.jpg' },
-                    { name: 'Jumping Jacks', image: 'img/egzersiz5.jpg' },
-                    { name: 'Mountain Climber', image: 'img/egzersiz6.jpg' },
+                    { name: 'Şınav', image: 'img/egzersiz4.jpg' },
+                    { name: 'Zıplama Jack', image: 'img/egzersiz5.jpg' },
+                    { name: 'Dağ Tırmanışı', image: 'img/egzersiz6.jpg' },
                     { name: 'Burpee', image: 'img/egzersiz7.jpg' },
-                    { name: 'Russian Twist', image: 'img/egzersiz8.jpg' },
-                    { name: 'Bicycle Crunch', image: 'img/egzersiz9.jpg' }
+                    { name: 'Rus Çevirme', image: 'img/egzersiz8.jpg' },
+                    { name: 'Bisiklet Karın', image: 'img/egzersiz9.jpg' }
                 ];
                 
                 this.currentExercise = 0;
