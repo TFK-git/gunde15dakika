@@ -65,6 +65,14 @@
     line-height:1.6;
     padding:20px;
     z-index:30;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+  }
+  .intro-screen > div {
+    max-width:320px;
+    width:100%;
+    margin:auto;
+    padding:15px 0;
   }
   .intro-screen h2 {margin-bottom:15px; font-size:2rem;}
   .intro-screen p {margin-bottom:15px; font-size:1.2rem;}
@@ -104,7 +112,10 @@
     padding:20px;
     display:none;
     z-index:20;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
   }
+  .finished-screen > div { max-width:400px; width:100%; padding:15px 0; }
   .finished-screen button {
     margin-top:20px;
     padding:10px 20px;
@@ -191,13 +202,14 @@ progressCircle.style.strokeDasharray = `${circumference}`;
 
 // ---- Responsive layout: image-referenced gauge positioning ----
 // Timer area on original image (2400x1080):
-//   white gauge center at ~(370, 171) → 15.4% left, 15.8% top
-//   gauge size ~259px → 24% of image height
+//   white gauge center at ~(444, 200) → 18.5% left, 18.5% top
+//   gauge width ~409px → 17% of image width
+// All 9 images have the same timer position.
 const IMG_NAT_W = 2400;
 const IMG_NAT_H = 1080;
-const TIMER_PCT_X = 0.050;  // left edge = 15.4% - (h/w)*24%/2 = 15.4% - 5.4%
-const TIMER_PCT_Y = 0.038;  // top edge  = 15.8% - 24%/2 = 15.8% - 12%
-const GAUGE_SIZE_FACTOR = 0.24; // gauge = 24% of image height
+const TIMER_CENTER_X = 0.175; // gauge center: 17.5% from left (slightly left of original)
+const TIMER_CENTER_Y = 0.175; // gauge center: 17.5% from top  (slightly above original)
+const GAUGE_SIZE_FACTOR = 0.17; // gauge = 17% of rendered image width
 
 function getImageRenderRect() {
   const vw = window.innerWidth;
@@ -223,12 +235,12 @@ function getImageRenderRect() {
 
 function layoutTimer() {
   const r = getImageRenderRect();
-  const size = r.rh * GAUGE_SIZE_FACTOR;
-  const tx = r.ox + r.rw * TIMER_PCT_X;
-  const ty = r.oy + r.rh * TIMER_PCT_Y;
+  const size = r.rw * GAUGE_SIZE_FACTOR;
+  const cx = r.ox + r.rw * TIMER_CENTER_X;
+  const cy = r.oy + r.rh * TIMER_CENTER_Y;
 
-  wrapper.style.left = tx + 'px';
-  wrapper.style.top = ty + 'px';
+  wrapper.style.left = (cx - size / 2) + 'px';
+  wrapper.style.top = (cy - size / 2) + 'px';
   wrapper.style.width = size + 'px';
   wrapper.style.height = size + 'px';
   timerText.style.fontSize = (size * 0.32) + 'px';
