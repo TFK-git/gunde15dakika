@@ -42,6 +42,32 @@
     border-radius:4px;
   }
   .btn:hover {background:#eee;}
+  .finished-screen {
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.85);
+    color:#fff;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    font-size:2rem;
+    text-align:center;
+    padding:20px;
+    display:none;
+    z-index:20;
+  }
+  .finished-screen button {
+    margin-top:20px;
+    padding:10px 20px;
+    font-size:1.2rem;
+    background:#fff;
+    color:#000;
+    border:none;
+    border-radius:4px;
+    cursor:pointer;
+  }
+  .finished-screen button:hover {background:#eee;}
 </style>
 </head>
 <body>
@@ -51,12 +77,16 @@
     <circle class="bg" cx="90" cy="90" r="80" fill="#fff"/>
     <circle class="progress" cx="90" cy="90" r="80" fill="none" stroke-width="10" stroke-linecap="round"/>
   </svg>
-  <div class="timer-text" id="timer">6</div>
+  <div class="timer-text" id="timer">06</div>
 </div>
 <div class="controls">
   <button class="btn" id="startPauseBtn">Başlat</button>
   <button class="btn" id="nextBtn">İleri</button>
   <button class="btn" id="prevBtn">Geri</button>
+</div>
+<div class="finished-screen" id="finishedScreen">
+  <div>🎉 Tebrikler! Bütün egzersizleri tamamladınız.</div>
+  <button id="restartBtn">Yeniden Başla</button>
 </div>
 
 <script>
@@ -72,16 +102,18 @@ const images = [
   'img/egzersiz9.jpg'
 ];
 let imgIndex = 0; // current exercise index
-let isExercise = true; // true = exercise phase, false = rest phase
-let timeLeft = isExercise ? 6 : 3; // seconds
-const EXERCISE_TIME = 6;
-const REST_TIME = 3;
+let state = 'stopped'; // 'stopped', 'exercise', 'rest', 'finished'
+const EXERCISE_TIME = 6; // seconds
+const REST_TIME = 3; // seconds
+let timeLeft = 0;
 const imgEl = document.getElementById('exerciseImg');
 const timerEl = document.getElementById('timer');
 const progressCircle = document.querySelector('.progress');
 const startPauseBtn = document.getElementById('startPauseBtn');
 const nextBtn = document.getElementById('nextBtn');
 const prevBtn = document.getElementById('prevBtn');
+const finishedScreen = document.getElementById('finishedScreen');
+const restartBtn = document.getElementById('restartBtn');
 const bipSound = new Audio("data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBzGH0fPTgjMGHm7A7+OZURE");
 
 // Pre-calc circumference
@@ -95,44 +127,58 @@ let isPaused = false;
 function updateTimer() {
   timerEl.textContent = String(timeLeft).padStart(2, '0');
   // set gauge color based on phase
-  if (isExercise) {
+  if (state === 'exercise') {
     progressCircle.style.stroke = '#ff0000'; // red for exercise
-  } else {
+  } else if (state === 'rest') {
     progressCircle.style.stroke = '#00ff00'; // green for rest
+  } else {
+    progressCircle.style.stroke = '#777'; // stopped/finished gray
   }
   // update progress dash offset
-  const total = isExercise ? EXERCISE_TIME : REST_TIME;
+  const total = (state === 'exercise') ? EXERCISE_TIME : REST_TIME;
   const progress = 1 - (timeLeft / total); // 0 at start, 1 at end
   const offset = circumference * progress;
   progressCircle.style.strokeDashoffset = offset;
   // update image: during exercise show current, during rest show next
-  if (isExercise) {
+  if (state === 'exercise') {
     imgEl.src = images[imgIndex];
-  } else {
+  } else if (state === 'rest') {
     imgEl.src = images[(imgIndex + 1) % images.length];
+  }
+  // hide/show finished screen
+  if (state === 'finished') {
+    finishedScreen.style.display = 'flex';
+  } else {
+    finishedScreen.style.display = 'none';
   }
 }
 
 function tick() {
   // beep in last 3 seconds of exercise
-  if (isExercise && timeLeft <= 3) {
+  if (state === 'exercise' && timeLeft <= 3) {
     bipSound.currentTime = 0;
     bipSound.play().catch(()=>{}); // ignore autoplay errors
   }
-  if (!isPaused && timeLeft > 0) {
+  if (!isPaused && (state === 'exercise' || state === 'rest') && timeLeft > 0) {
     timeLeft--;
     updateTimer();
-  } else if (!isPaused && timeLeft <= 0) {
+  } else if (!isPaused && (state === 'exercise' || state === 'rest') && timeLeft <= 0) {
     // phase finished
-    if (isExercise) {
+    if (state === 'exercise') {
       // exercise ended -> rest
-      isExercise = false;
+      state = 'rest';
       timeLeft = REST_TIME;
-    } else {
-      // rest ended -> next exercise
-      isExercise = true;
+    } else if (state === 'rest') {
+      // rest ended -> next exercise or finished
       imgIndex = (imgIndex + 1) % images.length;
-      timeLeft = EXERCISE_TIME;
+      if (imgIndex === 0) {
+        // we just completed the last exercise's rest (since imgIndex wrapped to 0)
+        state = 'finished';
+        timeLeft = 0;
+      } else {
+        state = 'exercise';
+        timeLeft = EXERCISE_TIME;
+      }
     }
     updateTimer();
   }
@@ -150,6 +196,11 @@ function pauseTimer() {
   }
 }
 function toggleStartPause() {
+  if (state === 'finished') {
+    // restart from beginning
+    resetWorkout();
+    return;
+  }
   isPaused = !isPaused;
   startPauseBtn.textContent = isPaused ? 'Devam Et' : 'Duraklat';
   if (isPaused) {
@@ -159,8 +210,9 @@ function toggleStartPause() {
   }
 }
 function goNext() {
-  // skip to next exercise immediately
-  isExercise = true;
+  // skip to next exercise immediately (only if not finished)
+  if (state === 'finished') return;
+  state = 'exercise';
   imgIndex = (imgIndex + 1) % images.length;
   timeLeft = EXERCISE_TIME;
   updateTimer();
@@ -169,22 +221,32 @@ function goNext() {
 }
 function goPrev() {
   // go to previous exercise
-  isExercise = true;
+  if (state === 'finished') return;
+  state = 'exercise';
   imgIndex = (imgIndex - 1 + images.length) % images.length;
   timeLeft = EXERCISE_TIME;
   updateTimer();
   if (!timerInterval) startTimer();
+}
+function resetWorkout() {
+  // reset to initial stopped state
+  pauseTimer();
+  state = 'stopped';
+  imgIndex = 0;
+  timeLeft = 0;
+  updateTimer();
+  startPauseBtn.textContent = 'Başlat';
 }
 
 // initialize
 startPauseBtn.addEventListener('click', toggleStartPause);
 nextBtn.addEventListener('click', goNext);
 prevBtn.addEventListener('click', goPrev);
+restartBtn.addEventListener('click', resetWorkout);
 
-// start initially
+// start in stopped state; do NOT start timer automatically
 updateTimer();
-startTimer();
-startPauseBtn.textContent = 'Duraklat';
+startPauseBtn.textContent = 'Başlat';
 </script>
 </body>
 </html>
