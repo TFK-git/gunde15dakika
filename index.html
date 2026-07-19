@@ -293,6 +293,13 @@
       animation: breathe 4s ease-in-out infinite;
     }
 
+    .rest-label.countdown-label {
+      font-size: min(calc(3.5vw + 1rem), 6vw);
+      letter-spacing: 0.05em;
+      padding: 0 5vw;
+      white-space: nowrap;
+    }
+
     @keyframes breathe {
       0% {
         opacity: 0;
@@ -349,7 +356,7 @@
       <h2>Günde 15dk Egzersiz</h2>
       <p>Bu egzersiz yaklaşık <strong>15 dakika</strong> sürecek; her egzersiz <strong>60 saniye</strong> sürer
         ve ardından <strong>30 saniye</strong> dinlenme alırsınız.</p>
-      <p>Bu antrenmanı aşağıdaki faydaları sağlar:</p>
+      <p>Bu antrenman aşağıdaki faydaları sağlar:</p>
       <ul class="benefits">
         <li><span class="b-title">🛡️ Eklemleri Korur ve Dengeyi Geliştirir</span><span class="b-desc">Ayakta yapılan
             zorlu hareketlerin (örneğin derin squat) aksine, destekli oturma pozisyonu sayesinde diz ve kalça
@@ -585,6 +592,15 @@
 
     let timerInterval = null;
     let isPaused = false;
+    let countdownInterval = null;
+    const COUNTDOWN_TIME = 5;
+
+    function showCountdown() {
+      restLabel.textContent = 'BAŞLAMAYA ' + String(timeLeft).padStart(2, '0');
+      restLabel.classList.add('visible', 'countdown-label');
+      imgEl.classList.add('resting');
+      progressCircle.style.stroke = '#00aaff';
+    }
 
     function updateTimer() {
       timerEl.textContent = String(timeLeft).padStart(2, '0');
@@ -613,9 +629,12 @@
         imgEl.src = images[(imgIndex + 1) % images.length];
         imgEl.classList.add('resting');
         restLabel.classList.add('visible');
+      } else if (state === 'countdown') {
+        imgEl.classList.add('resting');
+        restLabel.classList.add('visible', 'countdown-label');
       } else {
         imgEl.classList.remove('resting');
-        restLabel.classList.remove('visible');
+        restLabel.classList.remove('visible', 'countdown-label');
       }
 
       // screens
@@ -626,6 +645,10 @@
       } else if (state === 'stopped') {
         finishedScreen.style.display = 'none';
         introScreen.style.display = 'flex';
+        controls.style.display = 'none';
+      } else if (state === 'countdown') {
+        finishedScreen.style.display = 'none';
+        introScreen.style.display = 'none';
         controls.style.display = 'none';
       } else {
         finishedScreen.style.display = 'none';
@@ -638,6 +661,9 @@
       if (state === 'exercise' && timeLeft <= 3) {
         bipSound.currentTime = 0;
         bipSound.play().catch(() => { });
+      }
+      if (!isPaused && state === 'countdown') {
+        return;
       }
       if (!isPaused && (state === 'exercise' || state === 'rest') && timeLeft > 0) {
         timeLeft--;
@@ -716,6 +742,8 @@
     }
     function resetWorkout() {
       pauseTimer();
+      clearInterval(countdownInterval);
+      countdownInterval = null;
       state = 'stopped';
       imgIndex = 0;
       timeLeft = 0;
@@ -723,19 +751,35 @@
       startPauseBtn.textContent = 'Duraklat';
     }
 
+    function beginCountdown() {
+      introScreen.style.display = 'none';
+      finishedScreen.style.display = 'none';
+      controls.style.display = 'flex';
+      state = 'countdown';
+      timeLeft = COUNTDOWN_TIME;
+      showCountdown();
+      if (countdownInterval) clearInterval(countdownInterval);
+      countdownInterval = setInterval(() => {
+        timeLeft--;
+        if (timeLeft <= 0) {
+          clearInterval(countdownInterval);
+          countdownInterval = null;
+          state = 'exercise';
+          timeLeft = EXERCISE_TIME;
+          updateTimer();
+          startTimer();
+          return;
+        }
+        showCountdown();
+      }, 1000);
+    }
+
     // init
     startPauseBtn.addEventListener('click', toggleStartPause);
     nextBtn.addEventListener('click', goNext);
     prevBtn.addEventListener('click', goPrev);
-    restartBtn.addEventListener('click', resetWorkout);
-    startBtn.addEventListener('click', () => {
-      introScreen.style.display = 'none';
-      state = 'exercise';
-      timeLeft = EXERCISE_TIME;
-      updateTimer();
-      startTimer();
-      startPauseBtn.textContent = 'Duraklat';
-    });
+    restartBtn.addEventListener('click', beginCountdown);
+    startBtn.addEventListener('click', beginCountdown);
 
     updateTimer();
     startPauseBtn.textContent = 'Duraklat';
