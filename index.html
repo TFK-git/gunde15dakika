@@ -265,6 +265,50 @@
     .finished-screen button:hover {
       background: #eee;
     }
+
+    .rest-label {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      pointer-events: none;
+      font-size: min(calc(8vw + 4rem), 18vw);
+      font-weight: bold;
+      letter-spacing: 0.15em;
+      max-width: 100vw;
+      padding: 0 4vw;
+      text-align: center;
+      box-sizing: border-box;
+      overflow: hidden;
+      color: #fff;
+      text-shadow: 0 0 20px rgba(0, 0, 0, 0.6);
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    .rest-label.visible {
+      visibility: visible;
+      animation: breathe 4s ease-in-out infinite;
+    }
+
+    @keyframes breathe {
+      0% {
+        opacity: 0;
+        transform: scale(0.96);
+      }
+
+      50% {
+        opacity: 1;
+        transform: scale(1.04);
+      }
+
+      100% {
+        opacity: 0;
+        transform: scale(0.96);
+      }
+    }
   </style>
   <link rel="icon" type="image/svg+xml" href="icon.svg">
   <link rel="apple-touch-icon" href="icon.svg">
@@ -302,10 +346,10 @@
   </div>
   <div class="intro-screen" id="introScreen">
     <div>
-      <h2>15 Dakikalık Ev Egzersizi</h2>
-      <p>Bu rutinde toplam <strong>15 dakika</strong> sürecek; her egzersiz <strong>1 dakika (60 saniye)</strong> sürer
+      <h2>Günde 15dk Egzersiz</h2>
+      <p>Bu egzersiz yaklaşık <strong>15 dakika</strong> sürecek; her egzersiz <strong>60 saniye</strong> sürer
         ve ardından <strong>30 saniye</strong> dinlenme alırsınız.</p>
-      <p>Bu interval antrenmanı aşağıdaki faydaları sağlar:</p>
+      <p>Bu antrenmanı aşağıdaki faydaları sağlar:</p>
       <ul class="benefits">
         <li><span class="b-title">🛡️ Eklemleri Korur ve Dengeyi Geliştirir</span><span class="b-desc">Ayakta yapılan
             zorlu hareketlerin (örneğin derin squat) aksine, destekli oturma pozisyonu sayesinde diz ve kalça
@@ -329,6 +373,7 @@
     <div>🎹 Tebrikler! Bütün egzersizleri tamamladınız.</div>
     <button id="restartBtn">Yeniden Başla</button>
   </div>
+  <div class="rest-label" id="restLabel">DİNLEN</div>
 
   <script>
     const images = [
@@ -358,6 +403,7 @@
     const finishedScreen = document.getElementById('finishedScreen');
     const restartBtn = document.getElementById('restartBtn');
     const introScreen = document.getElementById('introScreen');
+    const restLabel = document.getElementById('restLabel');
     const bipSound = new Audio("data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBzGH0fPTgjMGHm7A7+OZURE");
     const wrapper = document.getElementById('timerWrapper');
     const timerText = document.querySelector('.timer-text');
@@ -489,7 +535,6 @@
       if (radioPlaying) playRadio();
     });
     populateRadioSelect();
-    applyRadioStateOnLoad();
 
     // Pre-calc circumference
     const radius = 80;
@@ -563,11 +608,14 @@
       if (state === 'exercise') {
         imgEl.src = images[imgIndex];
         imgEl.classList.remove('resting');
+        restLabel.classList.remove('visible');
       } else if (state === 'rest') {
         imgEl.src = images[(imgIndex + 1) % images.length];
         imgEl.classList.add('resting');
+        restLabel.classList.add('visible');
       } else {
         imgEl.classList.remove('resting');
+        restLabel.classList.remove('visible');
       }
 
       // screens
@@ -575,12 +623,10 @@
         finishedScreen.style.display = 'flex';
         introScreen.style.display = 'none';
         controls.style.display = 'none';
-        if (radioPlaying) stopRadio();
       } else if (state === 'stopped') {
         finishedScreen.style.display = 'none';
         introScreen.style.display = 'flex';
         controls.style.display = 'none';
-        if (radioPlaying) stopRadio();
       } else {
         finishedScreen.style.display = 'none';
         introScreen.style.display = 'none';
@@ -653,7 +699,6 @@
       timeLeft = EXERCISE_TIME;
       updateTimer();
       if (!timerInterval) startTimer();
-      playRadio();
     }
     function goPrev() {
       if (state === 'finished') return;
@@ -668,7 +713,6 @@
       timeLeft = EXERCISE_TIME;
       updateTimer();
       if (!timerInterval) startTimer();
-      playRadio();
     }
     function resetWorkout() {
       pauseTimer();
@@ -691,7 +735,6 @@
       updateTimer();
       startTimer();
       startPauseBtn.textContent = 'Duraklat';
-      playRadio();
     });
 
     updateTimer();
