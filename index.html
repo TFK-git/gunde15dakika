@@ -280,7 +280,7 @@
     </svg>
     <div class="timer-text" id="timer">06</div>
   </div>
-  <div class="controls">
+  <div class="controls" id="controls" style="display:none">
     <button class="btn" id="startPauseBtn">Duraklat</button>
     <button class="btn icon-btn" id="prevBtn" aria-label="Geri">&lt;</button>
     <button class="btn icon-btn" id="nextBtn" aria-label="İleri">&gt;</button>
@@ -351,6 +351,7 @@
     const timerEl = document.getElementById('timer');
     const progressCircle = document.querySelector('.progress');
     const startPauseBtn = document.getElementById('startPauseBtn');
+    const controls = document.getElementById('controls');
     const nextBtn = document.getElementById('nextBtn');
     const prevBtn = document.getElementById('prevBtn');
     const startBtn = document.getElementById('startBtn');
@@ -573,14 +574,17 @@
       if (state === 'finished') {
         finishedScreen.style.display = 'flex';
         introScreen.style.display = 'none';
+        controls.style.display = 'none';
         if (radioPlaying) stopRadio();
       } else if (state === 'stopped') {
         finishedScreen.style.display = 'none';
         introScreen.style.display = 'flex';
+        controls.style.display = 'none';
         if (radioPlaying) stopRadio();
       } else {
         finishedScreen.style.display = 'none';
         introScreen.style.display = 'none';
+        controls.style.display = 'flex';
       }
     }
 
