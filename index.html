@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>15 Dakikalık Ev Egzersizi Zamanlayıcı</title>
+  <title>Günde 15 Dakika Egzersiz</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="manifest" href="manifest.json">
   <style>
@@ -127,15 +127,6 @@
 
     .btn:hover {
       background: #eee;
-    }
-
-    .gauge {
-      width: 100%;
-      height: 100%;
-    }
-
-    .progress {
-      stroke-width: 5.56%;
     }
 
     .intro-screen {
@@ -378,7 +369,7 @@
   </div>
   <div class="finished-screen" id="finishedScreen">
     <div>🎹 Tebrikler! Bütün egzersizleri tamamladınız.</div>
-    <button id="restartBtn">Yeniden Başla</button>
+    <button id="restartBtn">Başa dön</button>
   </div>
   <div class="rest-label" id="restLabel">DİNLEN</div>
 
@@ -412,6 +403,9 @@
     const introScreen = document.getElementById('introScreen');
     const restLabel = document.getElementById('restLabel');
     const bipSound = new Audio("data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBzGH0fPTgjMGHm7A7+OZURE");
+    const countdownSound = new Audio('sounds/countdown.mp3');
+    const finishSound = new Audio('sounds/finish.mp3');
+    let finishPlayed = false;
     const wrapper = document.getElementById('timerWrapper');
     const timerText = document.querySelector('.timer-text');
     const radioSelect = document.getElementById('radioSelect');
@@ -486,14 +480,25 @@
       updateRadioBtn();
     }
     function applyRadioStateOnLoad() {
-      const saved = getCookie(COOKIE_NAME);
-      if (saved && saved.split('|')[1] === '1') {
-        playRadio();
-      }
+      // Tarayıcılar kullanıcı etkileşimi olmadan otomatik ses çalmayı engeller,
+      // bu yüzden çalma burada denenmez; yalnızca çerezdeki durum korunur ve
+      // egzersiz "Başlat" ile başlayınca beginCountdown içinde çalınır.
     }
     function playRadio() {
       const idx = parseInt(radioSelect.value, 10);
       const url = radioStations[idx].url;
+      // playRadio() her zaman bir kullanıcı hareketi (gesture) içinden
+      // çağrılır (müzik butonu veya "Başlat"). Bu yüzden durumu hemen
+      // "çalıyor" olarak işaretleyip çerezi güncelle; böylece cookie
+      // gerçek durumu (istasyonIndex|1) her zaman yansıtır.
+      radioPlaying = true;
+      updateRadioBtn();
+      saveRadioState();
+      function onErr(e) {
+        radioPlaying = false;
+        updateRadioBtn();
+        saveRadioState();
+      }
       if (url.includes('.m3u8') && !radioAudio.canPlayType('application/vnd.apple.mpegurl')) {
         if (window.Hls && Hls.isSupported()) {
           if (window._hls) window._hls.destroy();
@@ -501,24 +506,16 @@
           window._hls = hls;
           hls.loadSource(url);
           hls.attachMedia(radioAudio);
+          radioAudio.play().catch(() => { });
           hls.on(Hls.Events.MANIFEST_PARSED, () => {
-            radioAudio.play().then(onPlay).catch(onErr);
+            radioAudio.play().catch(onErr);
           });
+          hls.on(Hls.Events.ERROR, onErr);
           return;
         }
       }
       radioAudio.src = url;
-      radioAudio.play().then(onPlay).catch(onErr);
-      function onPlay() {
-        radioPlaying = true;
-        updateRadioBtn();
-        saveRadioState();
-      }
-      function onErr() {
-        radioPlaying = false;
-        updateRadioBtn();
-        saveRadioState();
-      }
+      radioAudio.play().catch(onErr);
     }
     function stopRadio() {
       radioAudio.pause();
@@ -593,7 +590,8 @@
     let timerInterval = null;
     let isPaused = false;
     let countdownInterval = null;
-    const COUNTDOWN_TIME = 5;
+    let countdownPaused = false;
+    const COUNTDOWN_TIME = 10;
 
     function showCountdown() {
       restLabel.textContent = 'BAŞLAMAYA ' + String(timeLeft).padStart(2, '0');
@@ -615,7 +613,9 @@
       }
 
       // progress dash offset
-      const total = (state === 'exercise') ? EXERCISE_TIME : REST_TIME;
+      const total = (state === 'exercise') ? EXERCISE_TIME
+        : (state === 'rest') ? REST_TIME
+          : (state === 'countdown') ? COUNTDOWN_TIME : 1;
       const progress = 1 - (timeLeft / total);
       const offset = circumference * progress;
       progressCircle.style.strokeDashoffset = offset;
@@ -628,6 +628,7 @@
       } else if (state === 'rest') {
         imgEl.src = images[(imgIndex + 1) % images.length];
         imgEl.classList.add('resting');
+        restLabel.textContent = 'DİNLEN';
         restLabel.classList.add('visible');
       } else if (state === 'countdown') {
         imgEl.classList.add('resting');
@@ -642,6 +643,12 @@
         finishedScreen.style.display = 'flex';
         introScreen.style.display = 'none';
         controls.style.display = 'none';
+        pauseTimer();
+        if (!finishPlayed) {
+          finishPlayed = true;
+          finishSound.currentTime = 0;
+          finishSound.play().catch(() => { });
+        }
       } else if (state === 'stopped') {
         finishedScreen.style.display = 'none';
         introScreen.style.display = 'flex';
@@ -662,16 +669,18 @@
         bipSound.currentTime = 0;
         bipSound.play().catch(() => { });
       }
-      if (!isPaused && state === 'countdown') {
-        return;
-      }
       if (!isPaused && (state === 'exercise' || state === 'rest') && timeLeft > 0) {
         timeLeft--;
         updateTimer();
       } else if (!isPaused && (state === 'exercise' || state === 'rest') && timeLeft <= 0) {
         if (state === 'exercise') {
-          state = 'rest';
-          timeLeft = REST_TIME;
+          if (imgIndex === images.length - 1) {
+            state = 'finished';
+            timeLeft = 0;
+          } else {
+            state = 'rest';
+            timeLeft = REST_TIME;
+          }
         } else if (state === 'rest') {
           imgIndex = (imgIndex + 1) % images.length;
           if (imgIndex === 0) {
@@ -699,19 +708,30 @@
     }
     function toggleStartPause() {
       if (state === 'finished') {
-        resetWorkout();
+        goToIntro();
         return;
       }
       isPaused = !isPaused;
       startPauseBtn.textContent = isPaused ? 'Devam Et' : 'Duraklat';
       if (isPaused) {
         pauseTimer();
+        if (countdownInterval) {
+          clearInterval(countdownInterval);
+          countdownInterval = null;
+          countdownPaused = true;
+        }
       } else {
-        startTimer();
+        if (countdownPaused) {
+          countdownPaused = false;
+          startCountdownInterval();
+        } else {
+          startTimer();
+        }
       }
     }
     function goNext() {
       if (state === 'finished') return;
+      clearInterval(countdownInterval); countdownInterval = null; countdownPaused = false;
       if (imgIndex === images.length - 1) {
         finishedScreen.style.display = 'flex';
         introScreen.style.display = 'none';
@@ -728,6 +748,7 @@
     }
     function goPrev() {
       if (state === 'finished') return;
+      clearInterval(countdownInterval); countdownInterval = null; countdownPaused = false;
       if (imgIndex === 0) {
         introScreen.style.display = 'flex';
         state = 'stopped';
@@ -740,24 +761,24 @@
       updateTimer();
       if (!timerInterval) startTimer();
     }
-    function resetWorkout() {
+    function goToIntro() {
       pauseTimer();
       clearInterval(countdownInterval);
       countdownInterval = null;
+      countdownPaused = false;
+      isPaused = false;
+      finishPlayed = false;
       state = 'stopped';
       imgIndex = 0;
       timeLeft = 0;
+      introScreen.style.display = 'flex';
+      finishedScreen.style.display = 'none';
+      controls.style.display = 'none';
       updateTimer();
       startPauseBtn.textContent = 'Duraklat';
     }
 
-    function beginCountdown() {
-      introScreen.style.display = 'none';
-      finishedScreen.style.display = 'none';
-      controls.style.display = 'flex';
-      state = 'countdown';
-      timeLeft = COUNTDOWN_TIME;
-      showCountdown();
+    function startCountdownInterval() {
       if (countdownInterval) clearInterval(countdownInterval);
       countdownInterval = setInterval(() => {
         timeLeft--;
@@ -774,12 +795,28 @@
       }, 1000);
     }
 
+    function beginCountdown() {
+      introScreen.style.display = 'none';
+      finishedScreen.style.display = 'none';
+      controls.style.display = 'flex';
+      state = 'countdown';
+      timeLeft = COUNTDOWN_TIME;
+      countdownPaused = false;
+      finishPlayed = false;
+      showCountdown();
+      countdownSound.currentTime = 0;
+      countdownSound.play().catch(() => { });
+      if (radioPlaying) playRadio();
+      startCountdownInterval();
+    }
+
     // init
     startPauseBtn.addEventListener('click', toggleStartPause);
     nextBtn.addEventListener('click', goNext);
     prevBtn.addEventListener('click', goPrev);
-    restartBtn.addEventListener('click', beginCountdown);
+    restartBtn.addEventListener('click', goToIntro);
     startBtn.addEventListener('click', beginCountdown);
+    applyRadioStateOnLoad();
 
     updateTimer();
     startPauseBtn.textContent = 'Duraklat';

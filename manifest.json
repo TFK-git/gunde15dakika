@@ -1,7 +1,7 @@
 {
   "name": "Günde15dakika",
   "short_name": "Egzersiz Zamanlayıcı",
-  "description": "15 dakikalık ev egzersizi zamanlayıcı uygulaması",
+  "description": "Günde 15dk ev egzersizi",
   "start_url": "./index.html",
   "display": "fullscreen",
   "background_color": "#000000",
